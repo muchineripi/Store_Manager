@@ -1,19 +1,53 @@
 from tkinter import *
+from db import Database
+from tkinter import messagebox
+
+db = Database('store.db')
+selected_item = ''
+
+def populate_list():
+    orders_list.delete(0, END)
+    for row in db.fetch():
+        orders_list.insert(END, row)
 
 def add_item():
-    print('Add item')
+    if not item_text.get() or not customer_text.get() or not seller_text.get() or not price_text.get():
+        messagebox.showerror('Required fields', 'Please include all fields')
+    else:
+        db.insert(item_text.get(), customer_text.get(), seller_text.get(), price_text.get())
+        populate_list()
+        clear_input()
 
 def remove_item():
-    print('Remove item')
+    db.remove(selected_item[0])
+    clear_input()
+    populate_list()
 
 def update_item():
-    print('Update item')
+    db.update(selected_item[0], item_text.get(), customer_text.get(), seller_text.get(), price_text.get())
+    populate_list()
+    clear_input()
 
 def clear_input():
-    print('Clear Text')
+    global selected_item
+    item_entry.delete(0, END)
+    customer_entry.delete(0, END)
+    seller_entry.delete(0, END)
+    price_entry.delete(0, END)
+    selected_item = ''
 
-def select_item():
-    print('Select Item')
+def select_item(item):
+    clear_input()
+
+    global selected_item
+    index = orders_list.curselection()[0]
+    selected_item = orders_list.get(index)
+    print(selected_item)
+
+    item_entry.insert(END, selected_item[1])
+    customer_entry.insert(END, selected_item[2])
+    seller_entry.insert(END, selected_item[3])
+    price_entry.insert(END, selected_item[4])
 
 app = Tk()
 app.title("Majoress Boutique Store Manager")
@@ -26,7 +60,7 @@ item_entry = Entry(app, textvariable=item_text)
 item_entry.grid(row=0, column=1)
 
 customer_text = StringVar()
-customer_label = Label(app, text='Item name', font=('bold', 14), pady=20, padx=20)
+customer_label = Label(app, text='Customer', font=('bold', 14), pady=20, padx=20)
 customer_label.grid(row=0, column=2, sticky=W)
 customer_entry = Entry(app, textvariable=customer_text)
 customer_entry.grid(row=0, column=3)
@@ -63,5 +97,7 @@ scrollbar.grid(row=3, column=2, rowspan=6, sticky=E, padx=20)
 
 orders_list.config(yscrollcommand=scrollbar.set)
 orders_list.bind("<<ListboxSelect>>", select_item)
+
+populate_list()
 
 app.mainloop()
